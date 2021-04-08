@@ -1,0 +1,15 @@
+Link database vào pycharm (sử dụng dữ liệu trên phpmyadmin)
+Trường hợp đã có sql trên phpmyAdmin:
+- bấm vô Database (bên mé phải màn hình) -> chọn dấu cộng-> Data Source-> MySQL
+- Điền tên vào Name, Host (cái này để nguyên vì của t là localhost ròi), 
+User thì vào phpmyAdmin check trong vùng Database server -> user
+-Phần Database thì điền tên cái db các bạn lưu database (như t là t để có 1 cái là 
+software_engineering trong đó chứa 2 cái bảng là student và subjectlist) URL sẽ tự fix 
+theo cái database nhé.
+nhớ Test Connection (có thông báo Success là được, Apply rồi OK nha)
+Trường hợp chưa có sql trên phpmyAdmin:
+Chọn Home -> database muốn đẩy sql vào -> Import 
+-> chọn tệp sql -> chọn Go (scroll xuống dưới cùng)
+(t muốn đẩy student và subject list thì t chọn database lưu là 'software_engineering'
+-> Import -> chọn tệp -> Go)
+Sau khi import xong thì làm các bước giống như trường hợp có sql trên database.
