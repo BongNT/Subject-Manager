@@ -13,3 +13,8 @@ Chọn Home -> database muốn đẩy sql vào -> Import
 (t muốn đẩy student và subject list thì t chọn database lưu là 'software_engineering'
 -> Import -> chọn tệp -> Go)
 Sau khi import xong thì làm các bước giống như trường hợp có sql trên database.
+
+Ở file test_connection.py, cần sửa 2 cái là port và database do port mặc định của m là 3306 mà máy t thì t sửa
+thành 3307 nên các bạn chú ý xem cổng của mk là bao nhiu mà sửa. Còn tên database là xem lưu dữ liệu ở
+database nào thì chú  sửa(như t là lưu 2 cải bảng student và subjectlists ở test nên điền test)ý
+Chú ý là lúc kết nối nhớ bật xamp lên.
