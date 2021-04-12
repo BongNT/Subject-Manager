@@ -1,3 +1,4 @@
+from tkinter import tix
 from tkinter.ttk import *
 from tkinter import *
 from timetable import Timetable
@@ -61,7 +62,8 @@ class App(Frame):
         self.left_frame.grid_columnconfigure(0, weight=1)
 
         self.left_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
-        expand_button = Button(self.left_frame, text="Expand").grid(row=0, column=0, sticky="nsew")
+        expand_button = Button(self.left_frame, text="Expand",command=self.change_left_frame)
+        expand_button.grid(row=0, column=0, sticky="nsew")
         self.show_class_list_frame = Frame(self.left_frame)
         # self.show_class_list_frame.grid(row=2, column=0, sticky="nsew")
         self.show_class_list_frame.grid_columnconfigure(0, weight=1)
@@ -79,6 +81,7 @@ class App(Frame):
         self.find_entry.grid(row=0, column=1, sticky="ew")
         self.find_entry.bind("<Return>", self.find)
         sortby = StringVar()
+        #fix
         sort_class_list_selection = OptionMenu(self.show_class_list_frame, sortby, "a", "b")  # dropdown(18)
         sort_class_list_selection.grid(row=1, column=1, sticky="ew")
         self.subject_table = TableSubject(self)
@@ -109,13 +112,20 @@ class App(Frame):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
 
     def insert_data(self):
+        #fix
         self.timetable2.update_subject(self.subject_table.get_selected_data())
+        if self.is_show_new_timetable is not None:
+            self.timetable2.grid(row=0, column=1, sticky="nsew")
+            self.is_show_new_timetable = True
+
+    def change_left_frame(self):
+        pass
 
     def show_new_timetable(self):
         if self.is_show_new_timetable:
             self.timetable2.grid_forget()
             self.is_show_new_timetable = False
-            print(self.winfo_children())
+            #print(self.winfo_children())
 
         else:
             self.timetable2.grid(row=0, column=1, sticky="nsew")
@@ -127,6 +137,7 @@ class App(Frame):
         self.input_bar.delete(0, END)
 
     def find(self, event):
+        #fix
         print(self.find_entry.get())
         self.find_entry.delete(0, END)
 
@@ -135,7 +146,7 @@ class App(Frame):
 
 
 if __name__ == "__main__":
-    root = Tk()
+    root = tix.Tk()
     root.geometry()
     root.state('zoomed')
     app = App(root)

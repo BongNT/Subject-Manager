@@ -1,5 +1,6 @@
 from tkinter.ttk import *
 from tkinter import *
+from tkinter import colorchooser
 from tkinter.tix import *
 
 
@@ -25,10 +26,11 @@ class Subject(Label):
         self.note = data[11]
         self.grid(column=self.weekday, row=self.time[0], rowspan=int(self.time[1]) - int(self.time[0]) + 1,
                   sticky="nsew")
-
-    @property
+        info = Balloon(self,bg="red")
+        info.bind_widget(self, balloonmsg=self.get_info())
+        info.message.config(bg="white")
     def get_info(self):
-        return "subject_name:{}\nsubject_id:{}\nteacher_name:{}\nnumber_of_student:{}\ncredit:{}\nnote:{}".format(
+        return "Tên môn : {}\nMã môn học : {}\nGiảng viên : {}\nSố lượng sinh viên :{}\nTín chỉ : {}\nNhóm : {}".format(
             self.subject, self.subject_id, self.teacher_name
             , self.number_of_student, self.credit, self.note)
 
@@ -48,7 +50,9 @@ class Subject(Label):
         self.destroy()
 
     def change_color(self):
-        pass
+        color_picker = colorchooser.askcolor()[1]
+        print(color_picker)
+        self.configure(background=color_picker)
 
 
 if __name__ == "__main__":

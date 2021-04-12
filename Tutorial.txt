@@ -7,6 +7,7 @@ User thì vào phpmyAdmin check trong vùng Database server -> user
 software_engineering trong đó chứa 2 cái bảng là student và subjectlist) URL sẽ tự fix 
 theo cái database nhé.
 nhớ Test Connection (có thông báo Success là được, Apply rồi OK nha)
+
 Trường hợp chưa có sql trên phpmyAdmin:
 Chọn Home -> database muốn đẩy sql vào -> Import 
 -> chọn tệp sql -> chọn Go (scroll xuống dưới cùng)
