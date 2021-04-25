@@ -14,11 +14,11 @@ class Crawling(scrapy.Spider):
                 "student_name":line.xpath(".//td[3]/text()").extract_first(),
                 "DOB": line.xpath(".//td[4]/text()").extract_first(),
                 "class_name": line.xpath(".//td[5]/text()").extract_first(),
-                "subject_id": line.xpath(".//td[6]/text()").extract_first(),
+                "class_id": line.xpath(".//td[6]/text()").extract_first(),
                 "subject_name": line.xpath(".//td[7]/text()").extract_first(),
                 "group": line.xpath(".//td[8]/text()").extract_first(),
                 "credit": line.xpath(".//td[9]/text()").extract_first(),
-                "note": line.xpath(".//td[10]/text()").extract_first()
+                "type": line.xpath(".//td[10]/text()").extract_first()
             }
         next_page = response.xpath('//li[@class="next"]/a/@href').extract_first()
         if next_page is not None:

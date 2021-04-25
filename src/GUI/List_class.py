@@ -1,17 +1,17 @@
 from tkinter.ttk import *
 from tkinter import *
-import json
-import os
+from SQLManagement import SQLManagement
 
 class TableSubject(Treeview):
     def __init__(self, parent):
         Treeview.__init__(self, parent)
-        self.HEADING = ("order", "subject", "subject_name", "credit", "subject_id",
-                        "teacher_name", "number_of_students", "time", "weekday",
-                        "lesson", "place", "note")
+        self.HEADING = ( "Mã môn học", "Tên Môn học", "Tín",
+                       "Mã lớp môn học", "Giảng viên", "Số lượng học sinh",
+                       "Buổi", "Thứ", "Tiết", "Địa điểm", "Nhóm")
         self.initUI()
-        self.read_json_file()
-
+        self.sql_manager = SQLManagement()
+        #self.read_json_file()
+        self.insert_data(self.get_data_from_sql())
     def initUI(self):
         style = Style()
         # configure color
@@ -44,33 +44,45 @@ class TableSubject(Treeview):
     def insert_data(self, data):
         count = 0
         for i in data:
-            list = tuple(i.values())
             if count % 2 == 0:
-                self.insert(parent='', index='end', iid=count, values=list, tag=('evenrow'))
+                self.insert(parent='', index='end', iid=count, values=i, tag=('evenrow'))
             else:
-                self.insert(parent='', index='end', iid=count, values=list, tag=('oddrow'))
+                self.insert(parent='', index='end', iid=count, values=i, tag=('oddrow'))
             count += 1
 
-    def read_json_file(self):
-        absFilePath = os.path.abspath(__file__)
-        print(absFilePath)
-        projectPath = absFilePath
-        for i in range(3):
-            projectPath = os.path.dirname(projectPath)
-        dataPath = projectPath + "/res/Data/timetable.json"
+    def find(self, input, findOption, sortOption, is_DESC):
+        self.remove_all()
+        from BTL_CNPM.src.GUI.App import OPTION
+        intFindOption = 0
+        intSortOption = 0
+        for i in range(11):
+            if findOption == OPTION[i]:
+                intFindOption = i
 
-        with open(dataPath, 'r') as file:
-            d = file.read()
-            data = json.loads(d)
-            self.insert_data(data)
+                break
+        for i in range(11):
+            if sortOption == OPTION[i]:
+                intSortOption = i
+                break
+        input = "%" + input + "%"
+        print(findOption, sortOption,)
+        list_data = self.sql_manager.find(input, intFindOption, intSortOption,is_DESC)
+        self.insert_data(list_data)
 
-
+    def remove_all(self):
+        for record in self.get_children():
+            self.delete(record)
+    def get_data_from_sql(self):
+        return list(self.sql_manager.get_list_class())
     def get_selected_data(self):
         selected = self.selection()
         value = []
+        print(1, selected)
         for s in selected:
-            value.append(self.item(s, 'values'))
-        print(value)
+            d = self.item(s, 'values')
+            data = d[0:6]+ d[7:]
+            value.append(data)
+            print(data)
         return value
 
 
