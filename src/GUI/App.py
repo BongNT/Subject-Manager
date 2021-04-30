@@ -1,3 +1,5 @@
+import json
+import os
 from tkinter import tix, ttk
 from tkinter.ttk import *
 from tkinter import *
@@ -12,7 +14,7 @@ class App(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.parent = parent
-        self.student = None
+        self.student = Student()
         self.is_show_new_timetable = False
         self.is_show_class_list = False
         self.pack(fill=BOTH, expand=True, side=TOP)
@@ -21,10 +23,9 @@ class App(Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=18)
 
-        Style().configure("abc", padding=(0, 0, 0, 0), font='Calibri 10')
+        Style().configure("", padding=(0, 0, 0, 0), font='Calibri 12')
         self.initUI()
-
-        print(self.grid_slaves(1, 1))
+        self.read_save_file()
 
     def initUI(self):
         self.top_frame = LabelFrame(self)
@@ -49,12 +50,12 @@ class App(Frame):
         self.input_bar.bind("<Return>", self.search_student_id)
         search_button = Button(self.top_frame, text="Search", command=self.search_student_id)
         search_button.grid(row=0, column=2, rowspan=1, sticky="nsew")
-        mic_button = Button(self.top_frame, text="Mic")
+        mic_button = Button(self.top_frame, text="Save", command=self.save_all)
         mic_button.grid(row=0, column=3, rowspan=1, sticky="nsew")
         new_timetable_button = Button(self.top_frame, text="Add new Timetable", command=self.show_new_timetable)
         new_timetable_button.grid(row=0, column=4, sticky="nsew")
         # mid
-        self.timetable1 = Timetable(self.mid_frame)
+        self.timetable1 = Timetable(self.mid_frame, False)
         self.timetable1.grid(row=0, column=0, sticky="nsew")
         self.timetable2 = Timetable(self.mid_frame)
 
@@ -66,8 +67,9 @@ class App(Frame):
         self.left_frame.grid_columnconfigure(0, weight=1)
 
         self.left_frame.grid(column=0, row=0, rowspan=2, sticky="nsew")
-        self.student_info = Label(self.left_frame, text="")
-        self.student_info.grid(row=0, column=0, sticky="nsew")
+        self.student_info = StringVar()
+        student_info_label = Label(self.left_frame, textvariable=self.student_info)
+        student_info_label.grid(row=0, column=0, sticky="nsew")
         self.show_class_list_frame = Frame(self.left_frame)
         # self.show_class_list_frame.grid(row=2, column=0, sticky="nsew")
         self.show_class_list_frame.grid_columnconfigure(0, weight=1)
@@ -78,7 +80,9 @@ class App(Frame):
         self.show_class_list_frame.grid_rowconfigure(3, weight=1)
         self.show_class_list_frame.grid_rowconfigure(4, weight=1)
         self.show_class_list_frame.grid_rowconfigure(5, weight=50)
-        show_class_list_button = Button(self.left_frame, text="Show Class", command=self.show_class_list)
+        self.show_class = StringVar()
+        self.show_class.set("Danh sách môn học")
+        show_class_list_button = Button(self.left_frame, textvariable=self.show_class, command=self.show_class_list)
         show_class_list_button.grid(row=1, column=0, columnspan=2, sticky="nsew")
         sort_class_list_label = Label(self.show_class_list_frame, text="Sort")
         sort_class_list_label.grid(row=3, column=0, sticky="nsew")
@@ -105,6 +109,7 @@ class App(Frame):
         self.is_DESC = BooleanVar()
         check_box_sort = Checkbutton(self.show_class_list_frame, text="Giảm dần", variable=self.is_DESC, onvalue=True, offvalue=False)
         check_box_sort.grid(row=4, column=1, sticky="nsew")
+
         # create popup menu in subject_id table
         self.popup_menu = Menu(self.subject_table, tearoff=False)
         self.popup_menu.add_command(label="Insert into Timetable", command=self.insert_data)
@@ -112,7 +117,12 @@ class App(Frame):
 
         setting_button = Button(self.left_frame, text="Setting", command=self.open_setting)
         setting_button.grid(row=5, column=0, columnspan=2, sticky="nsew")
-
+        self.subjects_info = StringVar()
+        self.set_subjects_info()
+        subject_info_label = Label(self.left_frame, textvariable=self.subjects_info)
+        subject_info_label.grid(row=4, column=0, columnspan=2, sticky="nsew")
+        self.timetable2.bind("<ButtonRelease-1>", self.set_subjects_info)
+        self.timetable2.bind("<ButtonRelease-3>", self.set_subjects_info)
     def show_class_list(self):
         if self.is_show_class_list:
             self.mid_frame.grid(row=1, column=1, rowspan=1, sticky="nsew")
@@ -120,7 +130,9 @@ class App(Frame):
             self.show_class_list_frame.grid_forget()
             self.subject_table.grid_forget()
             self.is_show_class_list = False
+            self.show_class.set("Danh sách môn học")
         else:
+            self.show_class.set("Thời khóa biểu")
             self.top_frame.grid_forget()
             self.mid_frame.grid_forget()
             self.show_class_list_frame.grid(row=2, column=0, sticky="nsew")
@@ -136,6 +148,7 @@ class App(Frame):
         if self.is_show_new_timetable is not None:
             self.timetable2.grid(row=0, column=1, sticky="nsew")
             self.is_show_new_timetable = True
+            self.set_subjects_info()
 
 
 
@@ -143,11 +156,8 @@ class App(Frame):
         if self.is_show_new_timetable:
             self.timetable2.grid_forget()
             self.is_show_new_timetable = False
-            #print(self.winfo_children())
-
         else:
             self.timetable2.grid(row=0, column=1, sticky="nsew")
-            print(self.mid_frame.winfo_children())
             self.is_show_new_timetable = True
 
     def search_student_id(self, event = None):
@@ -157,21 +167,108 @@ class App(Frame):
             print("search", self.input_bar.get())
             self.timetable1.delete_all_subjects()
             self.timetable1.insert_subject_from_student_id(input)
+            self.timetable2.delete_all_subjects()
+            self.timetable2.subject_manager.color_manager = self.timetable1.copy_color()
+            self.timetable2.insert_subject_from_student_id(input)
+            self.set_subjects_info()
 
-        self.student = Student(SQLManagement().get_student(self.input_bar.get()))
-        self.student_info.configure(text = self.student.get_info())
-        self.input_bar.delete(0, END)
+        else:
+            print("ma sinh vien ko hop le\n MSV gom 8 so")
+            return
+        if self.is_show_new_timetable is not None:
+            self.timetable2.grid(row=0, column=1, sticky="nsew")
+            self.is_show_new_timetable = True
+        if len(SQLManagement().get_student(self.input_bar.get())) != 0:
+            self.student = Student(SQLManagement().get_student(self.input_bar.get()))
+            self.set_student_info()
+            self.set_subjects_info()
+            self.input_bar.delete(0, END)
+        else:
+            print("khong co sinh vien nay ")
 
     def find(self, event=None):
         #fix
         print(self.find_entry.get())
-        self.subject_table.find(self.find_entry.get(), self.findby.get(), self.sortby.get(), self.is_DESC.get())
 
+        self.subject_table.find(self.find_entry.get(), self.findby.get(), self.sortby.get(), self.is_DESC.get(), self.student.is_CLC if self.student is not None else None)
+        print("APP", (self.student.is_CLC if self.student is not None else None))
 
     def open_setting(self):
         pass
 
+    def set_subjects_info(self, event=None):
+        s = """Số tín Trường đăng ký : {}
+Số tín tự đăng ký: {}
+Số tiết 1 tuần trường đăng ký :{}
+Số tiết 1 tuần tự đăng ký :{}
+Tổng số tiết trống giữa 2 tiết: {}
+        """.format(self.timetable1.get_total_credit(), self.timetable2.get_total_credit(), self.timetable1.get_total_lesson(), self.timetable2.get_total_lesson(), self.timetable2.get_total_free_time())
+        self.subjects_info.set(s)
 
+    def set_student_info(self):
+        if self.student is not None:
+            self.student_info.set(self.student.get_info())
+
+    def save_all(self):
+        dataPath = self.__get_path_to("save.json")
+        data = {}
+        data["student"] = []
+        data["student"].append(self.student.save_data())
+        data["student"].append(self.timetable1.save_data())
+        data["student"].append(self.timetable2.save_data())
+        with open(dataPath, 'w') as file:
+            json.dump(data, file)
+        print("lưu thành công")
+
+    def read_save_file(self):
+        dataPath = self.__get_path_to("save.json")
+        try:
+            with open(dataPath, 'r') as file:
+                d = file.read()
+                json_data = json.loads(d)
+                print(self.__extract_data(json_data, 0))
+                self.student = Student(self.__extract_data(json_data, 0))
+                self.timetable1.insert_subject(self.__extract_data(json_data, 1))
+                self.timetable2.insert_subject(self.__extract_data(json_data, 2))
+        except :
+            print("không có file json")
+        self.set_subjects_info()
+        self.set_student_info()
+    def __extract_data(self, json_data, option):
+        """
+        option = 0, 1, 2
+        0: return student_data
+        1: return timetable1 data
+        2: return timetable2 data
+        """
+        if option ==1:
+            timetable1 = json_data["student"][1]["subject"]
+            data = []
+            for i in timetable1:
+                data.append(list(i.values()))
+            return data
+        elif option ==2:
+            timetable1 = json_data["student"][2]["subject"]
+            data = []
+            for i in timetable1:
+                data.append(list(i.values()))
+            return data
+        elif option ==0:
+            student_info = json_data["student"][0]
+            data =[]
+            data.append(list(student_info.values()))
+            return data
+
+    def __get_path_to(self, file_name):
+        try:
+            absFilePath = os.path.abspath(__file__)
+            projectPath = absFilePath
+            for i in range(3):
+                projectPath = os.path.dirname(projectPath)
+            dataPath = projectPath + "/res/Data/" + file_name
+            return dataPath
+        except FileNotFoundError:
+            print("không tìm thấy file")
 if __name__ == "__main__":
     root = tix.Tk()
     root.geometry()

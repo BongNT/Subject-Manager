@@ -7,12 +7,25 @@ from tkinter.tix import *
 
 
 class Subject(Label):
-    def __init__(self, parent, data, color="yellow"):
+    def __init__(self, parent, data, color="yellow", can_config=True):
         # 1 subject_id co thể có tiết thực hành, bài tập, hoặc chỉ có thực hành
         Label.__init__(self, parent)
+        self.can_config = can_config
         self.parent = parent
+        self.color = color
         self.get_data(data)
         self.initUI(color)
+
+    def initUI(self, color):
+
+        self.color = color
+        self.configure(text="{}\n{}".format(self.subject_name, self.place), background=color, relief=GROOVE,
+                       font='calibri 8')
+        self.popup_menu = Menu(self, tearoff=False)
+        if self.can_config:
+            self.popup_menu.add_command(label="Xóa", command=self.delete_subject)
+        self.popup_menu.add_command(label="Đổi màu", command=self.change_color)
+        self.bind("<Button-3>", self.show_popup_menu)
 
     # data of one subject_id
     def get_data(self, data):
@@ -38,14 +51,7 @@ class Subject(Label):
             self.subject_id, self.class_id, self.teacher_name
             , self.number_of_student, self.credit, self.type)
 
-    def initUI(self, color):
-        info_text = "{}\n{}".format(self.subject_name, self.place)
-        self.configure(text="{}\n{}".format(self.subject_name, self.place), background=color, relief=GROOVE,
-                       font='calibri 10')
-        self.popup_menu = Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Xóa", command=self.delete_subject)
-        self.popup_menu.add_command(label="Đổi màu", command=self.change_color)
-        self.bind("<Button-3>", self.show_popup_menu)
+
 
     def show_popup_menu(self, event):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
@@ -58,14 +64,36 @@ class Subject(Label):
 
     def change_color(self):
         subject_manager = self.parent.subject_manager
-
+        color_manager = subject_manager.color_manager
         color_picker = colorchooser.askcolor()[1]
         print(color_picker)
         # kiem tra xem co mau nao trung voi mau da chon
-        for class_id, color  in subject_manager.color_manager:
+        for class_id, color  in color_manager:
             if color == color_picker:
                 print("error, Mau nay da duoc dung")
+                break
+
+        for i in range(len(color_manager)):
+            if self.class_id == color_manager[i][0]:
+                color_manager[i][1] = color_picker
+                self.color = color_picker
         for subject in subject_manager.list_subject:
             if self.class_id == subject.class_id:
                 subject.set_color(color_picker)
+                subject.color = color_picker
 
+    def save_data(self):
+        data = {
+            "subject_id" : str(self.subject_id),
+            "subject_name" : str(self.subject_name),
+            "credit" : str(self.credit),
+            "class_id" : str(self.class_id),
+            "teacher_name" : str(self.teacher_name),
+            "number_of_student" : str(self.number_of_student),
+            "weekday" : str(self.weekday),
+            "time" : (str(self.time[0])+"-"+str(self.time[1])),
+            "place" : str(self.place),
+            "type" : str(self.type),
+            "color" : str(self.color)
+        }
+        return data

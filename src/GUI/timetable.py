@@ -5,11 +5,14 @@ from Subject import Subject
 from SubjectManager import SubjectManager
 
 class Timetable(Frame):
-    def __init__(self, parent, isConfiged = True):
+    def __init__(self, parent, can_config=True):
         Frame.__init__(self, parent)
         self.parent = parent
-        self.initUI()
         self.subject_manager = SubjectManager(self)
+        self.student_id = None
+        self.can_config = can_config
+        self.initUI()
+
     def initUI(self):
         # self.parent.title("timetable")
 
@@ -21,10 +24,7 @@ class Timetable(Frame):
         for i in range(15):
             self.grid_rowconfigure(i, weight=1)
 
-        # label_morning = Label(self, height = 2, width = 10,background = "pale violet red", relief=GROOVE,text = "Sáng")
-        # label_morning.grid(row=1,column=0, rowspan=6,sticky ="nsew")
-        # label_afternoon = Label(self, height=2, width=10, background="cyan2", relief=GROOVE, text="Chiều")
-        # label_afternoon.grid(row =7, column=0,rowspan = 6,sticky ="nsew")
+
         label_time = Label(self, height=2, width=7, background="yellow", relief=GROOVE, text="Tiết", )
         label_time.grid(row=0, column=0, sticky="nsew")
 
@@ -39,15 +39,18 @@ class Timetable(Frame):
             temp_label.grid(row=0, column=i-1, sticky="nsew")
         #  create popup
         self.popup_menu = Menu(self, tearoff=False)
-        self.popup_menu.add_command(label="Delete all subject", command=self.delete_all_subjects)
-        self.bind("<Button-3>", self.show_popup_menu)
+        self.popup_menu.add_command(label="Xóa hết các môn", command=self.delete_all_subjects)
+        if self.can_config:
+            self.bind("<Button-3>", self.show_popup_menu)
+
 
     def insert_subject_from_student_id(self,student_id):
-        self.subject_manager.create_list_subject(student_id)
+        self.student_id = student_id
+        self.subject_manager.create_list_subject(student_id, self.can_config)
 
     def insert_subject(self, list_data):
         for data in list_data:
-            self.subject_manager.append(data)
+            self.subject_manager.append(data, self.can_config)
 
     def delete_all_subjects(self):
         self.subject_manager.delete_all()
@@ -55,10 +58,23 @@ class Timetable(Frame):
     def show_popup_menu(self, event=None):
         self.popup_menu.tk_popup(event.x_root, event.y_root)
 
-if __name__ == "__main__":
-    root = Tk()
+    def copy_color(self):
+        a = []
+        for i in self.subject_manager.color_manager:
+            a.append(i)
+        return a
 
-    root.geometry()
-    app = Timetable(root)
-    app.pack()
-    root.mainloop()
+    def get_total_credit(self):
+        return self.subject_manager.get_total_credit()
+
+    def get_total_free_time(self):
+        return self.subject_manager.get_total_free_time()
+
+    def save_data(self):
+        data = {}
+        data["subject"] = []
+        self.subject_manager.save_data(data["subject"])
+        return data
+
+    def get_total_lesson(self):
+        return self.subject_manager.get_total_lesson()

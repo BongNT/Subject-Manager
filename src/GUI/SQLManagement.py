@@ -1,10 +1,14 @@
+import json
+import os
+
 import mysql.connector
 from mysql.connector import Error
 
 class SQLManagement:
 
     def __init__(self):
-        self.conn = mysql.connector.connect(host='localhost', user='root', port='3306', database='test')
+        data = self.get_config()
+        self.conn = mysql.connector.connect(host=data["host"], user=data["user"], port=data["port"], database=data["database"])
         self.connectDB()
         #self.query()
 
@@ -38,8 +42,10 @@ class SQLManagement:
             WHERE students.student_id = {} AND listsubject.type = class.type'''.format(student_id)
         self.cur.execute(query)
         s = self.cur.fetchall()
+
         return s
-    def find(self, input, findOption, sortOption, is_DESC):
+
+    def find(self, input, findOption, sortOption, is_DESC, is_CLC):
         option = ["class.subject_id", "subject.subject_name", "subject.credit", "class.class_id",
                   "class.teacher_name", "class.number_of_students", "class.time", "class.weekday",
                   "lesson", "place", "note"]
@@ -48,11 +54,37 @@ class SQLManagement:
                     class.time, class.weekday, class.lesson, class.place, class.type
                     FROM `class`  JOIN subject ON class.subject_id = subject.subject_id
                     '''
-        if len(input) >2 :
-            query += " WHERE {} LIKE '{}' ".format(option[findOption], input)
+        if findOption == 8:
+            start = 1
+            end = 14
+            if "-" in input:
+                time = input.split("-")
+                start = time[0]
+                end = time[1]
+            elif len(input) > 0:
+                start = input
+
+            query+=""" WHERE LEFT(`lesson`,LOCATE('-',`lesson`)-1) >= {} 
+	AND RIGHT(`lesson`,LENGTH(`lesson`)-LOCATE('-',`lesson`)) <={} 
+            """.format(start, end)
+
+        else:
+            if len(input) >2 :
+                query += " WHERE {} LIKE '{}' ".format(option[findOption], input)
+
+
+
+        if is_CLC:
+            query += " AND (subject.`subject_id` LIKE '%PES%' OR class.weekday = 0 OR RIGHT(class.`class_id`,2) >= 20) "
+        else:
+            query += "AND (subject.`subject_id` LIKE '%PES%' OR class.weekday = 0 OR RIGHT(class.`class_id`,2) < 20) "
+
+
         query += " ORDER BY {} ".format(option[sortOption])
         if is_DESC:
             query += "DESC"
+
+
         print(query)
         self.cur.execute(query)
         s = self.cur.fetchall()
@@ -78,7 +110,21 @@ class SQLManagement:
         self.conn.close()
         self.cur.close()
 
+    def get_config(self):
+        dataPath = None
+        try:
+            absFilePath = os.path.abspath(__file__)
+            projectPath = absFilePath
+            for i in range(3):
+                projectPath = os.path.dirname(projectPath)
+            dataPath = projectPath + "/res/Data/config.json"
 
+        except FileNotFoundError:
+            print("không tìm thấy file config.json")
+        with open(dataPath, 'r') as file:
+            d = file.read()
+            data = json.loads(d)
+        return data
 if __name__ == '__main__':
     a = SQLManagement()
     a.get_list_class()

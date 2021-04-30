@@ -9,18 +9,28 @@ class SubjectManager:
         self.sql_management = SQLManagement()
         self.color_manager = [] # [(class_id, hex color),...]
         self.parent = parent
-        self.available_lesson = [[1 for x in range(7)] for x in range(14)]
-    def create_list_subject(self, student_id):
+        self.available_lesson = [[1 for x in range(7)] for x in range(14)] # 1 is free
+
+    def create_list_subject(self, student_id, can_config):
         # search MSV -> list data
         # init subject_id
         list_data = self.sql_management.getStudentClasses(student_id)
         for i in list_data:
             print(i)
         for data in list_data:
-            self.append(data)
+            self.append(data, can_config)
 
-    def append(self, data):
+
+    def append(self, data, can_config):
         # ('INT2211', 'Cơ sở dữ liệu', 4, 'INT2211 23', 'ThS.Lê Hoàng Quỳnh', 26, 2.0, '3-4', 'PM 307-G2', '2')
+        if len(data) == 11 and self.__check_inputdata(data):  # data from json
+
+            color = data[10]
+            self.color_manager.append([data[3],color])
+            new_subject = Subject(self.parent, data[0:10], color, can_config)
+            self.list_subject.append(new_subject)
+            return
+
         if self.__check_inputdata(data):
             color = self.randomColor()
             # kiem tra xem co mon nay trong color_manager ko
@@ -33,17 +43,16 @@ class SubjectManager:
             if ck:
                 c = [data[3], color]
                 self.color_manager.append(c)
-            new_subject = Subject(self.parent, data,color)
+            new_subject = Subject(self.parent, data,color, can_config)
             self.list_subject.append(new_subject)
 
     def __check_inputdata(self, data):
         # kiem tra mon hoc co bi trung thoi gian khong
         lesson = data[7].split("-")
         weekday = int(data[6])
-        print(weekday,lesson[0], lesson[1])
         for i in range(int(lesson[0]), int(lesson[1]) + 1):
             if self.available_lesson[i - 1][weekday - 2] != 1:
-                print(12323132312312)
+                print("error, subject_manager, thoi gian khong phu hop")
                 return False
         for i in range(int(lesson[0]), int(lesson[1]) + 1):
             self.available_lesson[i-1][weekday - 2] = 0
@@ -106,15 +115,62 @@ class SubjectManager:
             subject.destroy()
         self.list_subject.clear()
         self.color_manager.clear()
+
     def __len__(self):
         return len(self.list_subject)
 
-if __name__ == "__main__":
-    sm = SubjectManager()
-    root = Tk()
+    def get_total_credit(self):
+        total = 0
+        for i in self.list_subject:
+            total += int(i.credit)
+        return total
 
-    root.geometry()
+    def get_total_free_time(self):
+        """
+        Bài toán:
+        1100
+        0100
+        1101
+        0101
+        0 là có môn học, 1 khong có môn học
+        :return số số 1 giữa số 0
+        Thuật toán :
+        tính tổng số 1
+        sau đó duyệt theo chiều dọc từ trên xuống trừ đi 1 nếu gặp số 1,
+         nếu gặp 0 mà chưa duyệt hết cột thì duyêt từ dưới lên trừ đi 1 nếu gặp số 1
+        """
+        cnt = 0
+        for weekday in range(7):
+            for i in range(14):
+                if self.available_lesson[i][weekday] == 1:
+                    cnt+=1
+        for weekday in range(7):
+            temp = 0
+            for i in range(14):
+                if self.available_lesson[i][weekday] == 1:
+                    temp +=1
+                else:
+                    break
+            if temp == 14:
+                cnt -= temp
+                continue
+            for i in range(13,-1,-1):
+                if self.available_lesson[i][weekday] == 1:
+                    temp +=1
+                else:
+                    break
+            cnt -= temp
+        return cnt
 
-    sm.delete(11)
-    sm.getinfo()
-    root.mainloop()
+    def save_data(self, data):
+        for subject in self.list_subject:
+            data.append(subject.save_data())
+
+    def get_total_lesson(self):
+        cnt = 0
+        for weekday in range(7):
+            for i in range(14):
+                 if self.available_lesson[i][weekday] == 0:
+                    cnt += 1
+        return cnt
+

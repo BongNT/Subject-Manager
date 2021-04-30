@@ -50,7 +50,7 @@ class TableSubject(Treeview):
                 self.insert(parent='', index='end', iid=count, values=i, tag=('oddrow'))
             count += 1
 
-    def find(self, input, findOption, sortOption, is_DESC):
+    def find(self, input, findOption, sortOption, is_DESC, is_CLC):
         self.remove_all()
         from BTL_CNPM.src.GUI.App import OPTION
         intFindOption = 0
@@ -64,9 +64,10 @@ class TableSubject(Treeview):
             if sortOption == OPTION[i]:
                 intSortOption = i
                 break
-        input = "%" + input + "%"
-        print(findOption, sortOption,)
-        list_data = self.sql_manager.find(input, intFindOption, intSortOption,is_DESC)
+        if intFindOption != 8:
+            input = "%" + input + "%"
+
+        list_data = self.sql_manager.find(input, intFindOption, intSortOption,is_DESC, is_CLC)
         self.insert_data(list_data)
 
     def remove_all(self):
@@ -86,10 +87,4 @@ class TableSubject(Treeview):
         return value
 
 
-if __name__ == "__main__":
-    root = Tk()
-    root.geometry()
-    app = TableSubject(root)
-    app.grid(row=0, column=0)
 
-    root.mainloop()
