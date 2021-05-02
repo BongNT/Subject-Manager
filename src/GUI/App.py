@@ -1,6 +1,6 @@
 import json
 import os
-from tkinter import tix, ttk
+from tkinter import tix, ttk, messagebox
 from tkinter.ttk import *
 from tkinter import *
 
@@ -26,6 +26,7 @@ class App(Frame):
         Style().configure("", padding=(0, 0, 0, 0), font='Calibri 12')
         self.initUI()
         self.read_save_file()
+        self.get_suggested_data()
 
     def initUI(self):
         self.top_frame = LabelFrame(self)
@@ -79,7 +80,9 @@ class App(Frame):
         self.show_class_list_frame.grid_rowconfigure(2, weight=1)
         self.show_class_list_frame.grid_rowconfigure(3, weight=1)
         self.show_class_list_frame.grid_rowconfigure(4, weight=1)
-        self.show_class_list_frame.grid_rowconfigure(5, weight=50)
+        self.show_class_list_frame.grid_rowconfigure(5, weight=1)
+        self.show_class_list_frame.grid_rowconfigure(6, weight=1)
+        self.show_class_list_frame.grid_rowconfigure(7, weight=23)
         self.show_class = StringVar()
         self.show_class.set("Danh sách môn học")
         show_class_list_button = Button(self.left_frame, textvariable=self.show_class, command=self.show_class_list)
@@ -98,8 +101,8 @@ class App(Frame):
         self.find_selection.grid(row=1, column=1, sticky="ew")
         find_button = Button(self.show_class_list_frame, text="Tìm",command=self.find)
         find_button.grid(row=1, column=0, sticky="ew")
-        separator = ttk.Separator(self.show_class_list_frame, orient='horizontal')
-        separator.grid(row=2, column=0,columnspan=2, sticky="ew")
+        separator1 = ttk.Separator(self.show_class_list_frame, orient='horizontal')
+        separator1.grid(row=2, column=0,columnspan=2, sticky="ew")
         self.sortby = StringVar()
         self.sortby.set(OPTION[7])
         self.sort_selection = OptionMenu(self.show_class_list_frame, self.sortby, *OPTION)  # dropdown(18)
@@ -123,6 +126,15 @@ class App(Frame):
         subject_info_label.grid(row=4, column=0, columnspan=2, sticky="nsew")
         self.timetable2.bind("<ButtonRelease-1>", self.set_subjects_info)
         self.timetable2.bind("<ButtonRelease-3>", self.set_subjects_info)
+        separator1 = ttk.Separator(self.show_class_list_frame, orient='horizontal')
+        separator1.grid(row=5, column=0, columnspan=2, sticky="ew")
+        self.suggestion_button = Button(self.show_class_list_frame, text="Gợi ý môn học", command=self.show_suggestion_table)
+        self.suggestion_button.grid(row=6,column=0, columnspan=2, sticky="nsew")
+
+    def show_suggestion_table(self, event=None):
+        self.subject_table.remove_all()
+        self.subject_table.set_suggestion()
+
     def show_class_list(self):
         if self.is_show_class_list:
             self.mid_frame.grid(row=1, column=1, rowspan=1, sticky="nsew")
@@ -151,7 +163,6 @@ class App(Frame):
             self.set_subjects_info()
 
 
-
     def show_new_timetable(self):
         if self.is_show_new_timetable:
             self.timetable2.grid_forget()
@@ -171,9 +182,10 @@ class App(Frame):
             self.timetable2.subject_manager.color_manager = self.timetable1.copy_color()
             self.timetable2.insert_subject_from_student_id(input)
             self.set_subjects_info()
+            self.subject_table.get_suggested_data(self.student.course)
 
         else:
-            print("ma sinh vien ko hop le\n MSV gom 8 so")
+            messagebox.showinfo("Error","MSV không hợp lệ \n MSV gồm 8 chữ số" )
             return
         if self.is_show_new_timetable is not None:
             self.timetable2.grid(row=0, column=1, sticky="nsew")
@@ -184,7 +196,8 @@ class App(Frame):
             self.set_subjects_info()
             self.input_bar.delete(0, END)
         else:
-            print("khong co sinh vien nay ")
+            self.student_info.set("")
+            messagebox.showinfo("Error","Không tìm thấy sinh viên" )
 
     def find(self, event=None):
         #fix
@@ -205,6 +218,9 @@ Tổng số tiết trống giữa 2 tiết: {}
         """.format(self.timetable1.get_total_credit(), self.timetable2.get_total_credit(), self.timetable1.get_total_lesson(), self.timetable2.get_total_lesson(), self.timetable2.get_total_free_time())
         self.subjects_info.set(s)
 
+    def get_suggested_data(self):
+        self.subject_table.get_suggested_data(self.student.course)
+
     def set_student_info(self):
         if self.student is not None:
             self.student_info.set(self.student.get_info())
@@ -218,7 +234,7 @@ Tổng số tiết trống giữa 2 tiết: {}
         data["student"].append(self.timetable2.save_data())
         with open(dataPath, 'w') as file:
             json.dump(data, file)
-        print("lưu thành công")
+        messagebox.showinfo("Lưu thành Công","Lưu thành Công")
 
     def read_save_file(self):
         dataPath = self.__get_path_to("save.json")
@@ -226,10 +242,10 @@ Tổng số tiết trống giữa 2 tiết: {}
             with open(dataPath, 'r') as file:
                 d = file.read()
                 json_data = json.loads(d)
-                print(self.__extract_data(json_data, 0))
                 self.student = Student(self.__extract_data(json_data, 0))
                 self.timetable1.insert_subject(self.__extract_data(json_data, 1))
                 self.timetable2.insert_subject(self.__extract_data(json_data, 2))
+
         except :
             print("không có file json")
         self.set_subjects_info()
@@ -238,8 +254,8 @@ Tổng số tiết trống giữa 2 tiết: {}
         """
         option = 0, 1, 2
         0: return student_data
-        1: return timetable1 data
-        2: return timetable2 data
+        1: return timetable1 list_data
+        2: return timetable2 list_data
         """
         if option ==1:
             timetable1 = json_data["student"][1]["subject"]
@@ -269,6 +285,7 @@ Tổng số tiết trống giữa 2 tiết: {}
             return dataPath
         except FileNotFoundError:
             print("không tìm thấy file")
+
 if __name__ == "__main__":
     root = tix.Tk()
     root.geometry()

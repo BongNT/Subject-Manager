@@ -5,6 +5,8 @@ from tkinter import *
 from tkinter import colorchooser
 from tkinter.tix import *
 
+from List_class import StudentTable
+
 
 class Subject(Label):
     def __init__(self, parent, data, color="yellow", can_config=True):
@@ -25,9 +27,10 @@ class Subject(Label):
         if self.can_config:
             self.popup_menu.add_command(label="Xóa", command=self.delete_subject)
         self.popup_menu.add_command(label="Đổi màu", command=self.change_color)
+        self.popup_menu.add_command(label="Danh sách lớp", command=self.show_list_student)
         self.bind("<Button-3>", self.show_popup_menu)
 
-    # data of one subject_id
+    # list_data of one subject_id
     def get_data(self, data):
         self.subject_id = data[0]
         self.subject_name = data[1]
@@ -62,6 +65,15 @@ class Subject(Label):
     def set_color(self, color):
         self.configure(background=color)
 
+    def show_list_student(self):
+        top = Toplevel()
+        top.grid_rowconfigure(0, weight=5)
+        top.grid_rowconfigure(1, weight=95)
+        top.grid_columnconfigure(0, weight=1)
+        label = Label(top, text = self.get_info() + "\nTiết : {}-{}\n Thứ:{}".format(self.time[0],self.time[1],self.weekday))
+        label.grid(row=0,column=0, sticky="nsew")
+        student_table = StudentTable(top ,self.class_id).grid(row=1,column=0, sticky="nsew")
+        top.geometry("1000x500")
     def change_color(self):
         subject_manager = self.parent.subject_manager
         color_manager = subject_manager.color_manager

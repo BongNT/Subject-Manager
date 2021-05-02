@@ -7,7 +7,7 @@ class Student:
         self.course = "QH-yyyy-I/CQ ....."
         self.is_CLC = False
         if data is not None:
-            print("insert data")
+            print("insert list_data")
             self.insert_data(data)
 
     def get_info(self):

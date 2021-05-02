@@ -1,4 +1,6 @@
 from tkinter import *
+from tkinter import messagebox
+
 from SQLManagement import SQLManagement
 from Subject import Subject
 class SubjectManager:
@@ -12,7 +14,7 @@ class SubjectManager:
         self.available_lesson = [[1 for x in range(7)] for x in range(14)] # 1 is free
 
     def create_list_subject(self, student_id, can_config):
-        # search MSV -> list data
+        # search MSV -> list list_data
         # init subject_id
         list_data = self.sql_management.getStudentClasses(student_id)
         for i in list_data:
@@ -23,7 +25,7 @@ class SubjectManager:
 
     def append(self, data, can_config):
         # ('INT2211', 'Cơ sở dữ liệu', 4, 'INT2211 23', 'ThS.Lê Hoàng Quỳnh', 26, 2.0, '3-4', 'PM 307-G2', '2')
-        if len(data) == 11 and self.__check_inputdata(data):  # data from json
+        if len(data) == 11 and self.check_inputdata(data):  # list_data from json
 
             color = data[10]
             self.color_manager.append([data[3],color])
@@ -31,7 +33,7 @@ class SubjectManager:
             self.list_subject.append(new_subject)
             return
 
-        if self.__check_inputdata(data):
+        if self.check_inputdata(data):
             color = self.randomColor()
             # kiem tra xem co mon nay trong color_manager ko
             ck =True
@@ -46,13 +48,13 @@ class SubjectManager:
             new_subject = Subject(self.parent, data,color, can_config)
             self.list_subject.append(new_subject)
 
-    def __check_inputdata(self, data):
+    def check_inputdata(self, data):
         # kiem tra mon hoc co bi trung thoi gian khong
         lesson = data[7].split("-")
-        weekday = int(data[6])
+        weekday = int(data[6]) if int(data[6]) != 0 else 8
         for i in range(int(lesson[0]), int(lesson[1]) + 1):
             if self.available_lesson[i - 1][weekday - 2] != 1:
-                print("error, subject_manager, thoi gian khong phu hop")
+                messagebox.showinfo("Error", "Từ tiết {} đến {} thứ {} đã có môn học được đăng ký".format(lesson[0], lesson[1], weekday if weekday != 0 else "CN"))
                 return False
         for i in range(int(lesson[0]), int(lesson[1]) + 1):
             self.available_lesson[i-1][weekday - 2] = 0
@@ -61,10 +63,10 @@ class SubjectManager:
         for subject in self.list_subject:
             # môn học đã được đăng ký
             if data[3] == subject.class_id and data[9] == subject.type:
-                print("Lỗi, lớp học{}-{} đã được đăng ký trước đó ".format(data[3], data[1]))
+                messagebox.showinfo("Error","Lớp học{}-{} đã được đăng ký trước đó".format(data[3], data[1]) )
                 return False
             if data[0] == subject.subject_id and data[3] != subject.class_id:
-                print("Lỗi, bạn đã đăng ký lớp học{}-{} ".format(subject.class_id, subject.subject_name))
+                messagebox.showinfo("Error", "Bạn đã đăng ký lớp học {}-{} \nnên không thể đăng ký lớp {}".format(subject.class_id, subject.subject_name,data[3]))
                 return False
         return True
 
@@ -101,9 +103,6 @@ class SubjectManager:
             if i[0] == class_id:
                 self.color_manager.remove(i)
                 break
-        print(len(self.color_manager))
-
-        #print(len(self.list_subject))
         d.clear()
 
     def delete_all(self):
@@ -173,4 +172,5 @@ class SubjectManager:
                  if self.available_lesson[i][weekday] == 0:
                     cnt += 1
         return cnt
+
 

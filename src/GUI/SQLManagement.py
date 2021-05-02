@@ -10,26 +10,9 @@ class SQLManagement:
         data = self.get_config()
         self.conn = mysql.connector.connect(host=data["host"], user=data["user"], port=data["port"], database=data["database"])
         self.connectDB()
-        #self.query()
 
     def connectDB(self):
         self.cur = self.conn.cursor()
-        if self.conn.is_connected():
-            print('Connected to MySQL database')
-        try:
-            print("connect successfully")
-        except:
-            self.conn.rollback()
-
-
-
-    def query(self):
-
-        #sql = "INSERT INTO `listsubject` (`student_id`,`class_id`, `class_id`, `type`) VALUES (%s,%s,%s,%s)"
-        sql = "SELECT * FROM `listsubject`"
-        self.cur.execute(sql)
-        s=self.cur.fetchone()
-        print(s)
 
     def getStudentClasses(self,student_id):
         print("sql")
@@ -42,7 +25,6 @@ class SQLManagement:
             WHERE students.student_id = {} AND listsubject.type = class.type'''.format(student_id)
         self.cur.execute(query)
         s = self.cur.fetchall()
-
         return s
 
     def find(self, input, findOption, sortOption, is_DESC, is_CLC):
@@ -63,7 +45,6 @@ class SQLManagement:
                 end = time[1]
             elif len(input) > 0:
                 start = input
-
             query+=""" WHERE LEFT(`lesson`,LOCATE('-',`lesson`)-1) >= {} 
 	AND RIGHT(`lesson`,LENGTH(`lesson`)-LOCATE('-',`lesson`)) <={} 
             """.format(start, end)
@@ -72,20 +53,25 @@ class SQLManagement:
             if len(input) >2 :
                 query += " WHERE {} LIKE '{}' ".format(option[findOption], input)
 
-
-
         if is_CLC:
             query += " AND (subject.`subject_id` LIKE '%PES%' OR class.weekday = 0 OR RIGHT(class.`class_id`,2) >= 20) "
         else:
             query += "AND (subject.`subject_id` LIKE '%PES%' OR class.weekday = 0 OR RIGHT(class.`class_id`,2) < 20) "
-
-
         query += " ORDER BY {} ".format(option[sortOption])
         if is_DESC:
             query += "DESC"
 
 
         print(query)
+        self.cur.execute(query)
+        s = self.cur.fetchall()
+        return s
+
+    def get_list_students(self, class_id):
+        query = '''SELECT students.student_id, students.student_name, students.DOB, students.student_class 
+FROM students  JOIN listsubject  on students.`student_id` = listsubject.`student_id`
+WHERE listsubject.class_id = "{}"
+GROUP BY students.student_id ORDER BY students.student_id'''.format(class_id)
         self.cur.execute(query)
         s = self.cur.fetchall()
         return s
@@ -102,6 +88,21 @@ class SQLManagement:
 
     def get_student(self, student_id):
         query = '''SELECT * FROM `students` WHERE student_id = {}'''.format(student_id)
+        self.cur.execute(query)
+        s = self.cur.fetchall()
+        return s
+
+    def get_suggested_data(self, course):
+        query = '''SELECT class.subject_id, subject.subject_name, subject.credit, 
+            class.class_id,class.teacher_name, class.number_of_students, 
+            class.time, class.weekday, class.lesson, class.place, class.type
+	        FROM students JOIN listsubject on students.`student_id` = listsubject.`student_id`
+	        JOIN subject ON subject.`subject_id` = listsubject.`subject_id`
+	        JOIN class ON class.class_id = listsubject.class_id
+	        WHERE students.student_class LIKE {}
+	        GROUP BY class.class_id
+    	    ORDER BY class.class_id,class.`weekday`, class.`lesson`'''.format(course)
+        print(query)
         self.cur.execute(query)
         s = self.cur.fetchall()
         return s
@@ -125,6 +126,5 @@ class SQLManagement:
             d = file.read()
             data = json.loads(d)
         return data
-if __name__ == '__main__':
-    a = SQLManagement()
-    a.get_list_class()
+
+
