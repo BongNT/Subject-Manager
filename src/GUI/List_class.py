@@ -53,7 +53,7 @@ class TableSubject(Treeview):
 
     def find(self, input, findOption, sortOption, is_DESC, is_CLC):
         self.remove_all()
-        from BTL_CNPM.src.GUI.App import OPTION
+        from App import OPTION
         intFindOption = 0
         intSortOption = 0
         for i in range(11):

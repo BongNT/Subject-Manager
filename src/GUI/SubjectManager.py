@@ -26,7 +26,6 @@ class SubjectManager:
     def append(self, data, can_config):
         # ('INT2211', 'Cơ sở dữ liệu', 4, 'INT2211 23', 'ThS.Lê Hoàng Quỳnh', 26, 2.0, '3-4', 'PM 307-G2', '2')
         if len(data) == 11 and self.check_inputdata(data):  # list_data from json
-
             color = data[10]
             self.color_manager.append([data[3],color])
             new_subject = Subject(self.parent, data[0:10], color, can_config)
@@ -56,18 +55,21 @@ class SubjectManager:
             if self.available_lesson[i - 1][weekday - 2] != 1:
                 messagebox.showinfo("Error", "Từ tiết {} đến {} thứ {} đã có môn học được đăng ký".format(lesson[0], lesson[1], weekday if weekday != 0 else "CN"))
                 return False
-        for i in range(int(lesson[0]), int(lesson[1]) + 1):
-            self.available_lesson[i-1][weekday - 2] = 0
-
         # kiem tra xem du lieu dua vao co trung voi mon dang co
         for subject in self.list_subject:
             # môn học đã được đăng ký
             if data[3] == subject.class_id and data[9] == subject.type:
-                messagebox.showinfo("Error","Lớp học{}-{} đã được đăng ký trước đó".format(data[3], data[1]) )
+                messagebox.showinfo("Error","Lớp học{}-{} đã được đăng ký trước đó".format(data[3], data[1]))
+                return False
+            if data[3] == subject.class_id and data[9].isdigit() and subject.type.isdigit():
+                messagebox.showinfo("Error", "Lớp học{}-{} đã được đăng ký trước đó".format(data[3], data[1]))
                 return False
             if data[0] == subject.subject_id and data[3] != subject.class_id:
                 messagebox.showinfo("Error", "Bạn đã đăng ký lớp học {}-{} \nnên không thể đăng ký lớp {}".format(subject.class_id, subject.subject_name,data[3]))
                 return False
+
+        for i in range(int(lesson[0]), int(lesson[1]) + 1):
+            self.available_lesson[i - 1][weekday - 2] = 0
         return True
 
     def getinfo(self):
@@ -92,7 +94,7 @@ class SubjectManager:
         for subject in self.list_subject:
             if class_id == subject.class_id:
                 lesson = subject.time
-                weekday = subject.weekday
+                weekday = subject.weekday if subject.weekday !=0 else 8
                 for i in range(int(lesson[0]), int(lesson[1]) + 1):
                     self.available_lesson[i-1][weekday - 2] = 1
                 d.append(subject)

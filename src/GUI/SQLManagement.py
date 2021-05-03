@@ -102,7 +102,6 @@ GROUP BY students.student_id ORDER BY students.student_id'''.format(class_id)
 	        WHERE students.student_class LIKE {}
 	        GROUP BY class.class_id
     	    ORDER BY class.class_id,class.`weekday`, class.`lesson`'''.format(course)
-        print(query)
         self.cur.execute(query)
         s = self.cur.fetchall()
         return s

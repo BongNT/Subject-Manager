@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from tkinter import tix, ttk, messagebox
 from tkinter.ttk import *
 from tkinter import *
@@ -26,7 +27,8 @@ class App(Frame):
         Style().configure("", padding=(0, 0, 0, 0), font='Calibri 12')
         self.initUI()
         self.read_save_file()
-        self.get_suggested_data()
+        threading.Thread(target=self.get_suggested_data).start()
+
 
     def initUI(self):
         self.top_frame = LabelFrame(self)
@@ -49,11 +51,11 @@ class App(Frame):
         self.input_bar = Entry(self.top_frame)
         self.input_bar.grid(row=0, column=1, rowspan=1, sticky="nsew")
         self.input_bar.bind("<Return>", self.search_student_id)
-        search_button = Button(self.top_frame, text="Search", command=self.search_student_id)
+        search_button = Button(self.top_frame, text="Tìm", command=self.search_student_id)
         search_button.grid(row=0, column=2, rowspan=1, sticky="nsew")
-        mic_button = Button(self.top_frame, text="Save", command=self.save_all)
+        mic_button = Button(self.top_frame, text="Lưu", command=self.save_all)
         mic_button.grid(row=0, column=3, rowspan=1, sticky="nsew")
-        new_timetable_button = Button(self.top_frame, text="Add new Timetable", command=self.show_new_timetable)
+        new_timetable_button = Button(self.top_frame, text="Thời khóa biểu 2", command=self.show_new_timetable)
         new_timetable_button.grid(row=0, column=4, sticky="nsew")
         # mid
         self.timetable1 = Timetable(self.mid_frame, False)
@@ -115,10 +117,10 @@ class App(Frame):
 
         # create popup menu in subject_id table
         self.popup_menu = Menu(self.subject_table, tearoff=False)
-        self.popup_menu.add_command(label="Insert into Timetable", command=self.insert_data)
+        self.popup_menu.add_command(label="Thêm môn học", command=self.insert_data)
         self.subject_table.bind("<Button-3>", self.show_popup_menu)
 
-        setting_button = Button(self.left_frame, text="Setting", command=self.open_setting)
+        setting_button = Button(self.left_frame, text="Help", command=self.open_setting)
         setting_button.grid(row=5, column=0, columnspan=2, sticky="nsew")
         self.subjects_info = StringVar()
         self.set_subjects_info()
@@ -182,7 +184,7 @@ class App(Frame):
             self.timetable2.subject_manager.color_manager = self.timetable1.copy_color()
             self.timetable2.insert_subject_from_student_id(input)
             self.set_subjects_info()
-            self.subject_table.get_suggested_data(self.student.course)
+            threading.Thread(target=self.get_suggested_data).start()
 
         else:
             messagebox.showinfo("Error","MSV không hợp lệ \n MSV gồm 8 chữ số" )
@@ -204,10 +206,40 @@ class App(Frame):
         print(self.find_entry.get())
 
         self.subject_table.find(self.find_entry.get(), self.findby.get(), self.sortby.get(), self.is_DESC.get(), self.student.is_CLC if self.student is not None else None)
-        print("APP", (self.student.is_CLC if self.student is not None else None))
+
 
     def open_setting(self):
-        pass
+        import webbrowser
+        def open_doc():
+            webbrowser.get().open("https://drive.google.com/drive/folders/1716kUv4Pq6Fo-OkcoV40hlahNElg6zM7?usp=sharing")
+        def open_drive():
+            webbrowser.get().open("https://drive.google.com/drive/folders/17TCXDiTqZ4JZ_KAl1MvKfGjyirzbTVFU?usp=sharing")
+
+        def open_github():
+            webbrowser.get().open("https://github.com/BongNT/BTL_CNPM.git")
+        def open_register():
+            webbrowser.get().open("http://dangkyhoc.vnu.edu.vn/dang-nhap")
+        top = Toplevel()
+        top.geometry("500x500")
+        top.grid_rowconfigure(0, weight=1)
+        top.grid_rowconfigure(1, weight=1)
+        top.grid_rowconfigure(2, weight=1)
+        top.grid_rowconfigure(3, weight=1)
+        #top.grid_rowconfigure(4, weight=1)
+        top.grid_columnconfigure(0, weight=10)
+        top.grid_columnconfigure(1, weight=1)
+
+        label = Label(top, text="Phần mềm quản lý môn học\nPhiên bản : 1.0\n Phát triển bởi Nhóm 5 gồm:\n Nguyễn Thành Bổng\n Đinh Phú Hoàng\n Phạm Minh Hoàng\n Trần Thành Long",font='calibri 14')
+        doc_button = Button(top,text="Hướng dẫn sử dụng", command=open_doc)
+        drive_button = Button(top,text="Lấy dữ liệu", command=open_drive)
+        github_button = Button(top,text="Github", command=open_github)
+        regist_button = Button(top,text="Đăng ký học", command=open_register)
+        doc_button.grid(row=0,column=1, sticky="nsew")
+        drive_button.grid(row=1, column=1, sticky="nsew")
+        github_button.grid(row=2, column=1, sticky="nsew")
+        regist_button.grid(row=3, column=1, sticky="nsew")
+        label.grid(row=0,column=0, rowspan=5, sticky="nsew")
+
 
     def set_subjects_info(self, event=None):
         s = """Số tín Trường đăng ký : {}
@@ -245,7 +277,6 @@ Tổng số tiết trống giữa 2 tiết: {}
                 self.student = Student(self.__extract_data(json_data, 0))
                 self.timetable1.insert_subject(self.__extract_data(json_data, 1))
                 self.timetable2.insert_subject(self.__extract_data(json_data, 2))
-
         except :
             print("không có file json")
         self.set_subjects_info()
