@@ -21,7 +21,7 @@ class Subject(Label):
     def initUI(self, color):
 
         self.color = color
-        self.configure(text="{}\n{}".format(self.subject_name, self.place), background=color, relief=GROOVE,
+        self.configure(text="{}\n{}".format(self.partition(self.subject_name), self.place), background=color, relief=GROOVE,
                        font='calibri 8')
         self.popup_menu = Menu(self, tearoff=False)
         if self.can_config:
@@ -51,7 +51,7 @@ class Subject(Label):
 
     def get_info(self):
         return "Tên môn : {}\nMã môn học : {}\nGiảng viên : {}\nSố lượng sinh viên :{}\nTín chỉ : {}\nNhóm : {}".format(
-            self.subject_id, self.class_id, self.teacher_name
+            self.subject_name, self.class_id, self.teacher_name
             , self.number_of_student, self.credit, self.type)
 
 
@@ -109,3 +109,16 @@ class Subject(Label):
             "color" : str(self.color)
         }
         return data
+
+    def partition(self, s):
+        if len(s) <= 40:
+            pos = s.find(" ", 20)
+            if pos != -1:
+                return s[0:pos] + "\n" + s[pos:]
+            return s
+        else:
+            pos = s.find(" ", 20)
+            if pos != -1:
+                next_pos = s.find(" ", pos +20)
+                return s[0:pos] + "\n" + s[pos: next_pos] + "\n" + s[next_pos:]
+            return s

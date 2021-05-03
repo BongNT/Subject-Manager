@@ -101,7 +101,7 @@ GROUP BY students.student_id ORDER BY students.student_id'''.format(class_id)
 	        JOIN class ON class.class_id = listsubject.class_id
 	        WHERE students.student_class LIKE {}
 	        GROUP BY class.class_id
-    	    ORDER BY class.class_id,class.`weekday`, class.`lesson`'''.format(course)
+    	    ORDER BY subject.subject_name,class.`weekday`, class.`lesson`'''.format(course)
         self.cur.execute(query)
         s = self.cur.fetchall()
         return s

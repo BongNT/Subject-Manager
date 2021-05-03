@@ -25,6 +25,9 @@ class SubjectManager:
 
     def append(self, data, can_config):
         # ('INT2211', 'Cơ sở dữ liệu', 4, 'INT2211 23', 'ThS.Lê Hoàng Quỳnh', 26, 2.0, '3-4', 'PM 307-G2', '2')
+        if self.get_total_credit() >= 40:
+            messagebox.showinfo("Error", "Số tín chỉ bạn đăng ký trong kỳ này \nđã vượt quá cho phép")
+            return
         if len(data) == 11 and self.check_inputdata(data):  # list_data from json
             color = data[10]
             self.color_manager.append([data[3],color])
@@ -110,7 +113,7 @@ class SubjectManager:
     def delete_all(self):
         for subject in self.list_subject:
             lesson = subject.time
-            weekday = subject.weekday
+            weekday = subject.weekday if subject.weekday != 0 else 8
             for i in range(int(lesson[0]), int(lesson[1]) + 1):
                 self.available_lesson[i-1][weekday - 2] = 1
             subject.destroy()
@@ -122,8 +125,11 @@ class SubjectManager:
 
     def get_total_credit(self):
         total = 0
-        for i in self.list_subject:
-            total += int(i.credit)
+        a = []
+        for subject in self.list_subject:
+            if len(a) == 0 or subject.subject_id not in a:
+                total += int(subject.credit)
+                a.append(subject.subject_id)
         return total
 
     def get_total_free_time(self):

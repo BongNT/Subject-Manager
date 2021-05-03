@@ -179,8 +179,8 @@ class App(Frame):
         if len(input) == 8:
             print("search", self.input_bar.get())
             self.timetable1.delete_all_subjects()
-            self.timetable1.insert_subject_from_student_id(input)
             self.timetable2.delete_all_subjects()
+            self.timetable1.insert_subject_from_student_id(input)
             self.timetable2.subject_manager.color_manager = self.timetable1.copy_color()
             self.timetable2.insert_subject_from_student_id(input)
             self.set_subjects_info()
@@ -294,7 +294,7 @@ Tổng số tiết trống giữa 2 tiết: {}
             for i in timetable1:
                 data.append(list(i.values()))
             return data
-        elif option ==2:
+        elif option == 2:
             timetable1 = json_data["student"][2]["subject"]
             data = []
             for i in timetable1:
@@ -302,7 +302,7 @@ Tổng số tiết trống giữa 2 tiết: {}
             return data
         elif option ==0:
             student_info = json_data["student"][0]
-            data =[]
+            data = []
             data.append(list(student_info.values()))
             return data
 
@@ -321,5 +321,6 @@ if __name__ == "__main__":
     root = tix.Tk()
     root.geometry()
     root.state('zoomed')
+    root.title("Quản lý môn  học")
     app = App(root)
     root.mainloop()
